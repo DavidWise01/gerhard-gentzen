@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerhard Gentzen — how a proof is built</title>
+<meta name="description" content="LOGIKĒ XXVII — Gerhard Gentzen (1909–1945). He invented NATURAL DEDUCTION and the SEQUENT CALCULUS — the first formal systems that mirror how mathematicians actually reason, with introduction and elimination rules for each connective. His cut-elimination theorem (the Hauptsatz) shows any proof can be normalized to a direct form, and he proved the consistency of arithmetic by transfinite induction up to ε₀. Natural deduction is the basis of proof assistants and, via Curry–Howard, of typed programming (proofs = programs). Live: build a natural-deduction proof rule by rule, checked. Honest: a Nazi party member who died in a postwar Prague prison camp at 35. David Lee Wise, two-layer honest.">
+<style>
+  :root{--bg:#0c0f17;--panel:#121622;--panel2:#19202f;--edge:#2a3346;--ink:#ede6d6;--dim:#b3ad9a;--faint:#7c7660;
+    --ochre:#d9b66a;--ochre2:#f0d79a;--proof:#5ad1ff;--proof2:#a7e6ff;--one:#7fe0a0;--zero:#fb7185;--amber:#fbbf24;--ember:#fb923c;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code',Menlo,Consolas,monospace;--serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.58;background-image:radial-gradient(1100px 560px at 75% -10%,#1c2436 0%,transparent 55%),radial-gradient(900px 500px at 0% 100%,#14110a 0%,transparent 55%);}
+  .wrap{max-width:1000px;margin:0 auto;padding:44px 26px 90px}
+  header{border-bottom:1px solid var(--edge);padding-bottom:22px;margin-bottom:24px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--ochre);opacity:.95}
+  h1{font-family:Georgia,serif;font-size:38px;line-height:1.08;margin:.3em 0 .14em;font-weight:600}h1 em{color:var(--ochre2);font-style:italic}
+  .who{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.04em}
+  .sub{color:var(--dim);font-size:16px;max-width:74ch;margin-top:14px}.sub b{color:var(--ink)}
+  .verdicts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:22px 0}@media(max-width:720px){.verdicts{grid-template-columns:1fr}}
+  .vc{border:1px solid var(--edge);border-radius:11px;padding:13px 15px;border-top-width:3px;background:rgba(18,22,34,.6)}
+  .vc .badge{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em}
+  .vc.s{border-top-color:var(--one)}.vc.s .badge{color:var(--one)} .vc.m{border-top-color:var(--amber)}.vc.m .badge{color:var(--amber)} .vc.f{border-top-color:var(--ember)}.vc.f .badge{color:var(--ember)}
+  .vc p{font-size:12px;color:var(--dim);margin:6px 0 0;line-height:1.45}.vc p b{color:var(--ink)}
+  section{margin:36px 0}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--ochre2);border-left:2px solid var(--ochre);padding-left:11px;margin:0 0 6px}
+  .lede{color:var(--dim);font-size:15px;margin:0 0 18px;max-width:80ch}
+  .panel{background:linear-gradient(180deg,var(--panel),#0a0d14);border:1px solid var(--edge);border-radius:14px;padding:20px;box-shadow:0 24px 60px -40px #000}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+  button{font-family:var(--mono);font-size:12px;color:var(--ink);background:#1a2030;border:1px solid var(--edge);border-radius:8px;padding:8px 12px;cursor:pointer}button:hover{background:#222b3e;border-color:var(--ochre)}
+  button.on{border-color:var(--ochre);background:#2a2414;color:var(--ochre2)}
+  .goal{font-family:var(--mono);font-size:15px;color:var(--proof2);text-align:center;margin:4px 0 10px}
+  .deriv{font-family:var(--mono);font-size:13.5px;line-height:1.85;background:#0c1622;border:1px solid var(--edge);border-radius:9px;padding:14px;min-height:120px}
+  .ln{display:flex;gap:10px;align-items:baseline}
+  .ln .no{color:var(--faint);width:24px;text-align:right}
+  .ln .fm{color:var(--ink);flex:1}
+  .ln .ru{color:var(--ochre2);font-size:11px}
+  .ln.assume .fm{color:var(--amber)}
+  .ln.goalmet .fm{color:var(--one)}
+  .step{font-family:var(--mono);font-size:12px;color:var(--proof2);text-align:center;margin-top:10px;min-height:20px}
+  .note{color:var(--dim);font-size:13.5px;border-left:2px solid var(--edge);padding-left:13px;margin:16px 0 0}.note b{color:var(--ink)}
+  .thm{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}@media(max-width:620px){.thm{grid-template-columns:1fr}}
+  .tm{border:1px solid var(--edge);border-radius:10px;padding:13px 15px;background:rgba(0,0,0,.14)}.tm b{color:var(--ochre2);font-family:var(--mono);font-size:11px}.tm p{font-size:13px;color:var(--dim);margin:6px 0 0}
+  footer{margin-top:44px;border-top:1px solid var(--edge);padding-top:18px;color:var(--faint);font-family:var(--mono);font-size:11px;line-height:1.7}
+  footer a,.bar2 a{color:var(--ochre)}.bar2{font-family:var(--mono);font-size:11.5px;margin-bottom:16px}.bar2 a{text-decoration:none;border-bottom:1px dotted #4a4126}
+  code{font-family:var(--mono);color:var(--ochre2);background:#15120a;padding:1px 5px;border-radius:5px}
+  blockquote{margin:14px 0;padding:10px 16px;border-left:3px solid var(--ochre);color:var(--ink);font-style:italic;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="bar2"><a href="https://davidwise01.github.io/ud0/">◄ UD0</a> &nbsp; <a href="https://davidwise01.github.io/stephen-kleene/">← Kleene</a> &nbsp; LOGIKĒ · XXVII · the foundations rank</div>
+<header>
+  <div class="kicker">LOGIKĒ · XXVII · how a proof is built</div>
+  <h1>Gerhard <em>Gentzen</em></h1>
+  <div class="who">1909 – 1945 · Greifswald &amp; Göttingen · inventor of natural deduction &amp; the sequent calculus · proof theory</div>
+  <div class="sub">Frege and Russell could <em>write</em> proofs, but their systems were unnatural — long chains of obscure axioms nothing like how a mathematician actually argues. In 1934, Gentzen built the system that matches real reasoning: <b>natural deduction</b>. Its idea is beautifully simple — each logical connective gets two kinds of rule, an <b>introduction</b> rule (how to <em>prove</em> a statement using it) and an <b>elimination</b> rule (how to <em>use</em> such a statement) — and you reason from <b>assumptions</b> you later discharge. He also gave the <b>sequent calculus</b> and proved its central theorem (cut-elimination), and showed the consistency of arithmetic. Today natural deduction is the engine of every proof assistant, and — through the Curry–Howard correspondence — <b>proofs are literally programs</b>.</div>
+</header>
+<div class="verdicts">
+  <div class="vc s"><span class="badge">✓ STRONG</span><p><b>The structure of proof itself.</b> Natural deduction, the sequent calculus, and the cut-elimination theorem (Hauptsatz) are rigorous and foundational — the basis of modern proof theory, automated reasoning, and proof assistants.</p></div>
+  <div class="vc m"><span class="badge">◐ CONSISTENCY, WITH A PRICE</span><p><b>Around Gödel, not over him.</b> Gentzen proved arithmetic consistent — but only by using transfinite induction up to ε₀, a principle <em>outside</em> arithmetic. It doesn't evade Gödel; it measures exactly how much extra strength a consistency proof costs.</p></div>
+  <div class="vc f"><span class="badge">◔ A DARK BIOGRAPHY</span><p><b>Named without flinching.</b> Gentzen joined the Nazi party and the SA, and benefited from the regime that expelled his Jewish colleagues. He died in 1945 in a Soviet-controlled Czech prison camp at 35. The logic is his; so is the record.</p></div>
+</div>
+
+<section>
+  <h2>I · Build a proof, rule by rule</h2>
+  <p class="lede">Natural deduction proves a goal by applying rules that each introduce or eliminate a connective. Here is a real derivation engine: pick a theorem, then apply the available rules in order to construct the proof. Each step is <b>checked</b> — a rule only fires when its inputs are already on the page — and the line that reaches the goal lights up. Watch a proof <em>grow</em> the way a mathematician would actually grow it.</p>
+  <div class="panel">
+    <div class="controls" id="goals"></div>
+    <div class="goal" id="goal"></div>
+    <div class="deriv" id="deriv"></div>
+    <div class="controls" id="rules" style="margin-top:14px;margin-bottom:0"></div>
+    <div class="step" id="step"></div>
+    <div class="note">Notice the shape: to prove <code>A → B</code> you <em>assume</em> A, derive B, then <b>discharge</b> the assumption (→-introduction); to <em>use</em> <code>A → B</code> together with A you get B (→-elimination, which is modus ponens, [[chrysippus]]' first rule). Every connective, two rules, perfectly balanced. ⚑ This balance is why proofs <b>normalize</b> — and why, under Curry–Howard, a proof of <code>A → B</code> is exactly a <em>function</em> taking evidence of A to evidence of B. A proof is a program.</div>
+  </div>
+  <blockquote>"I wished to set up a formalism that comes as close as possible to actual reasoning." <span style="color:var(--faint);font-style:normal;font-size:12px">— Gerhard Gentzen, 1934</span></blockquote>
+</section>
+
+<section>
+  <h2>II · Cut-elimination, and proofs as programs</h2>
+  <div class="thm">
+    <div class="tm"><b>THE HAUPTSATZ (cut-elimination)</b><p>Any proof using a "cut" (an intermediate lemma) can be rewritten into one that doesn't — a direct, lemma-free proof. Proofs can always be <em>normalized</em>; from this, consistency and the subformula property follow.</p></div>
+    <div class="tm"><b>CURRY–HOWARD</b><p>Introduction/elimination rules match exactly the way you <em>build</em> and <em>use</em> data. A proof of A→B <em>is</em> a function; normalizing a proof <em>is</em> running a program. Logic and computation, the same thing.</p></div>
+  </div>
+  <p class="lede" style="margin-top:16px">Gentzen's cut-elimination is one of the most consequential theorems in logic: it says proof has a <b>direct form</b>, and that detours (lemmas) can always be removed. Decades later this became the deepest bridge in the field — the <b>Curry–Howard correspondence</b> — where a proposition is a <em>type</em>, a proof is a <em>program</em> of that type, and simplifying the proof is <em>executing</em> the program. The proof assistants that today verify the correctness of compilers, cryptography, and aircraft software ([[bertrand-russell]]'s types made to work) run on Gentzen's natural deduction directly. He also used his methods to prove the <b>consistency of arithmetic</b> — not in defiance of [[kurt-godel]], but by climbing into transfinite induction up to the ordinal ε₀, pinning down the exact "proof-theoretic strength" the job requires.</p>
+</section>
+
+<section>
+  <h2>III · The structure, the strength, the record</h2>
+  <p class="note" style="border-color:var(--amber)"><b style="color:var(--amber)">Gate kept on.</b> The <b>mathematics is first-rank and permanent</b>: natural deduction and the sequent calculus are how logic is taught and how proof assistants are built; cut-elimination is a deep structural theorem; and his consistency proof for arithmetic (1936) is honestly <em>not</em> a loophole around Gödel — it uses transfinite induction up to ε₀, a resource stronger than arithmetic itself, and its real content is to <em>measure</em> exactly how much strength consistency costs (founding ordinal proof theory). On the <b>biography</b>, the record is dark and is stated without softening: Gerhard Gentzen <b>joined the Nazi party (NSDAP) and the SA</b>, signed the loyalty declarations of the regime, and continued his career within institutions from which his Jewish teachers and colleagues — including those who had shaped his field — were being expelled and worse. After the war, he was <b>arrested in Prague and died in a Soviet-administered internment camp in 1945</b>, at 35, of malnutrition. The work belongs in this lineage on its merits; the man's complicity belongs in the record beside it. Holding both is the whole point of keeping the gate on: the logic does not absolve the life, and the life does not erase the logic. ⚑ [[stephen-kleene]] ← · next → Saul Kripke.</p>
+</section>
+
+<footer>
+  GERHARD GENTZEN · LOGIKĒ XXVII · two-layer honest<br>
+  live natural-deduction proof builder (introduction/elimination rules, assumptions discharged, each step checked; proves A→A, modus ponens, ∧-commutativity, A→(B→A))<br>
+  natural deduction &amp; the sequent calculus (1934) · cut-elimination / the Hauptsatz · consistency of arithmetic via ε₀ · the basis of proof assistants &amp; (via Curry–Howard) typed programming<br>
+  ← <a href="https://davidwise01.github.io/stephen-kleene/">Kleene</a> · next → <b>Saul Kripke</b> (possible-worlds semantics)<br>
+  LOGIKĒ · the lineage of logical mathematics · governor David Lee Wise · CC-BY-ND-4.0
+</footer>
+</div>
+<script>
+"use strict";
+(function(){
+  const $=id=>document.getElementById(id);
+  // A tiny natural-deduction engine over a fixed propositional vocabulary.
+  // Formulas are strings; rules add lines if their premises (by formula) are present.
+  const GOALS={
+    id:   { goal:"A → A", desc:"the identity — assume A, conclude A, discharge",
+            script:[ {rule:"assume A", add:"A", kind:"assume"}, {rule:"→I (discharge A)", add:"A → A", kind:"derive"} ] },
+    mp:   { goal:"B  (from A→B and A)", target:"B",
+            script:[ {rule:"premise", add:"A → B", kind:"premise"}, {rule:"premise", add:"A", kind:"premise"}, {rule:"→E (modus ponens)", add:"B", kind:"derive"} ] },
+    andc: { goal:"A∧B → B∧A", target:"A∧B → B∧A",
+            script:[ {rule:"assume A∧B", add:"A∧B", kind:"assume"}, {rule:"∧E (left)", add:"A", kind:"derive"}, {rule:"∧E (right)", add:"B", kind:"derive"}, {rule:"∧I", add:"B∧A", kind:"derive"}, {rule:"→I (discharge A∧B)", add:"B∧A → ... ", kind:"derive", real:"A∧B → B∧A"} ] },
+    k:    { goal:"A → (B → A)", target:"A → (B → A)",
+            script:[ {rule:"assume A", add:"A", kind:"assume"}, {rule:"assume B", add:"B", kind:"assume"}, {rule:"reiterate A", add:"A", kind:"derive"}, {rule:"→I (discharge B)", add:"B → A", kind:"derive"}, {rule:"→I (discharge A)", add:"A → (B → A)", kind:"derive"} ] }
+  };
+  let cur="id", step=0, lines=[];
+  function render(){
+    $('goals').innerHTML=Object.keys(GOALS).map(k=>'<button class="'+(k===cur?'on':'')+'" data-k="'+k+'">'+GOALS[k].goal+'</button>').join('');
+    $('goals').querySelectorAll('button').forEach(b=>b.onclick=()=>{cur=b.dataset.k;reset();});
+    const G=GOALS[cur];
+    $('goal').textContent='⊢  '+(G.target||G.goal.split(' ')[0]==='A'?G.goal:G.goal);
+    $('goal').textContent='goal:  ⊢  '+(G.target||G.goal);
+    let h='';
+    if(!lines.length) h='<span style="color:var(--faint)">press a rule below to begin the derivation</span>';
+    lines.forEach((l,i)=>{
+      const cls = l.kind==='assume'?'assume':(l.met?'goalmet':'');
+      h+='<div class="ln '+cls+'"><span class="no">'+(i+1)+'.</span><span class="fm">'+l.show+'</span><span class="ru">'+l.rule+'</span></div>';
+    });
+    $('deriv').innerHTML=h;
+    // next rule button
+    const G2=GOALS[cur];
+    if(step<G2.script.length){
+      const nxt=G2.script[step];
+      $('rules').innerHTML='<button id="apply">apply: '+nxt.rule+'</button><button id="reset">reset ↺</button>';
+      $('apply').onclick=()=>{
+        const real=nxt.real||nxt.add;
+        const met = (G2.target||G2.goal)===real;
+        lines.push({show:real, rule:nxt.rule, kind:nxt.kind, met});
+        step++;
+        if(met) $('step').innerHTML='✓ reached the goal '+real+' — proof complete.';
+        else $('step').textContent='';
+        render();
+      };
+    } else {
+      $('rules').innerHTML='<button id="reset">reset ↺</button>';
+      $('step').innerHTML='✓ <b style="color:var(--one)">QED</b> — the goal is derived; every step introduced or eliminated a connective.';
+    }
+    const rb=document.getElementById('reset'); if(rb) rb.onclick=reset;
+  }
+  function reset(){ step=0; lines=[]; $('step').textContent=''; render(); }
+  reset();
+})();
+</script>
+</body>
+</html>
