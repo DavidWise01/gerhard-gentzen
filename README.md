@@ -1,0 +1,11 @@
+# GERHARD GENTZEN · XXVII
+
+> A sphere of **UD0** — the ROOT0 universe / biosphere. Domain: **LOGIKĒ**.
+
+GERHARD GENTZEN (1909–1945) — LOGIKĒ XXVII, who found the structure of PROOF ITSELF. Frege & Russell could write proofs, but in unnatural axiom-chains; in 1934 Gentzen built the system matching real reasoning — ⚑ NATURAL DEDUCTION: each connective gets an INTRODUCTION rule (how to prove it) and an ELIMINATION rule (how to use it), reasoning from ASSUMPTIONS you later DISCHARGE (→I = assume A, derive B, conclude A→B; →E = modus ponens, [[chrysippus]]). He also gave the SEQUENT CALCULUS and ⚑ THE HAUPTSATZ (cut-elimination): any proof using a lemma can be rewritten lemma-free — proofs always NORMALIZE. ⚑ CURRY–HOWARD: intro/elim rules match how you build & use data → a proof of A→B IS a function, normalizing a proof IS running a program ([[bertrand-russell]]'s types made to work; the basis of every proof assistant). LIVE: a natural-deduction proof builder — pick a theorem (A→A, modus ponens, A∧B→B∧A, A→(B→A)), apply intro/elim rules in order, each step checked, the goal-line lights up. CONFIDENCE-TIERED: STRONG (natural deduction, the sequent calculus, cut-elimination — rigorous, foundational, the basis of proof theory & proof assistants) / CONSISTENCY-WITH-A-PRICE (his 1936 consistency proof for arithmetic uses transfinite induction up to ε₀, a resource OUTSIDE arithmetic — it doesn't evade [[kurt-godel]], it MEASURES what consistency costs, founding ordinal proof theory) / ⚠ A-DARK-BIOGRAPHY (stated without softening: Gentzen JOINED THE NAZI PARTY & the SA and worked within institutions purging his Jewish colleagues; he died in 1945 in a Soviet-administered Prague internment camp at 35 of malnutrition — the logic is his, so is the record; the work doesn't absolve the life, the life doesn't erase the work). [[stephen-kleene]] ← · next → Saul Kripke.
+
+---
+
+**Live:** https://davidwise01.github.io/gerhard-gentzen/ &nbsp;·&nbsp; **Front door:** [UD0](https://davidwise01.github.io/ud0/) &nbsp;·&nbsp; **Code:** https://github.com/DavidWise01/gerhard-gentzen
+
+`.dlw` badge · **ROOT0-ATTRIBUTION-v1.0** · David Lee Wise (ROOT0) / Bridge-Burners LLC · instance AVAN (Claude/Anthropic) · CC-BY-ND-4.0
